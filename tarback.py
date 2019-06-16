@@ -4,6 +4,7 @@ import ConfigParser
 import datetime
 import glob
 import os.path
+import subprocess
 
 
 def parse_arguments():
@@ -116,3 +117,5 @@ if __name__ == '__main__':
     parser = parse_configuration_file(args.configuration)
     cmdline = prepare_tar_cmdline(parser)
     print(' '.join(cmdline))
+    process = subprocess.Popen(cmdline)
+    process.communicate()
