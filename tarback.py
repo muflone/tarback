@@ -89,9 +89,7 @@ def prepare_tar_cmdline(parser):
                        len(output_extension))
     snapshots_list = []
     for filename in sorted(os.listdir(directory)):
-        if (len(filename) == filename_length and
-                filename.startswith('backup_') and
-                filename.endswith('.' + output_extension)):
+        if filename.startswith('backup_') and '.tar' in filename:
             print(filename)
             snapshots_list.append(filename)
     # Determine snapshot filename
