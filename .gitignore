@@ -1,0 +1,9 @@
+# Python compiled sources
+*.pyc
+__pycache__/
+
+# Locales
+/po/locale/
+
+# Backup files
+*~
