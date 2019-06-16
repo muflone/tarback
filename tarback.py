@@ -6,6 +6,7 @@ import glob
 import os.path
 import subprocess
 
+SNAPSHOT_FILENAME_FORMAT = '{PREFIX}_{NAME}_{DATETIME}_{TYPE}.{FORMAT}'
 SNAPSHOT_DATETIME_FORMAT = '%Y-%m-%d_%H%M%S'
 SNAPSHOT_PREFIX = 'backup'
 
@@ -30,6 +31,45 @@ class Snapshot(object):
             self.type = fileparts[-1]
             self.datetime = datetime.datetime.strptime(
                 '_'.join(fileparts[-3:-1]), SNAPSHOT_DATETIME_FORMAT)
+
+
+class Configuration(object):
+    def __init__(self, filename):
+        self.parser = ConfigParser.RawConfigParser()
+        self.parser.optionxform = str
+        self.parser.read(filename)
+
+    def get(self, data_type, section, option, default):
+        result = default
+        if self.parser.has_section(section):
+            if self.parser.has_option(section, option):
+                if data_type is int:
+                    result = self.parser.getint(section, option)
+                elif data_type is float:
+                    result = self.parser.getfloat(section, option)
+                elif data_type is bool:
+                    result = self.parser.getboolean(section, option)
+                else:
+                    result = self.parser.get(section, option)
+        return result
+
+    def get_string(self, section, option, default):
+        return self.get(str, section, option, default)
+
+    def get_int(self, section, option, default):
+        return self.get(int, section, option, default)
+
+    def get_float(self, section, option, default):
+        return self.get(float, section, option, default)
+
+    def get_boolean(self, section, option, default):
+        return self.get(bool, section, option, default)
+
+    def has_section(self, section):
+        return self.parser.has_section(section)
+
+    def options(self, section):
+        return self.parser.options(section)
 
 
 def parse_arguments():
@@ -66,8 +106,8 @@ def get_parser_option(parser, data_type, section, option, default):
     return result
 
 
-def prepare_tar_cmdline(parser):
-    directory = get_parser_option(parser, str, 'general', 'target', '.')
+def prepare_tar_cmdline(configuration):
+    directory = configuration.get_string('general', 'target', '.')
     current_time = datetime.datetime.now().strftime('%Y-%m-%d_%H%M%S')
 
     arguments = ['tar', ]
@@ -79,10 +119,10 @@ def prepare_tar_cmdline(parser):
     arguments.append('--totals')
     arguments.append('--listed-incremental={FILENAME}'.format(
         FILENAME=os.path.join(directory, 'backup.snar')))
-    if get_parser_option(parser, int, 'general', 'followlinks', 1) == 1:
+    if configuration.get_int('general', 'followlinks', 1) == 1:
         arguments.append('--dereference')
 
-    value = get_parser_option(parser, str, 'general', 'format', '')
+    value = configuration.get_string('general', 'format', '')
     if value == 'gzip':
         arguments.append('--gzip')
         output_extension = 'tar.gz'
@@ -118,14 +158,18 @@ def prepare_tar_cmdline(parser):
             print(filename)
             snapshots_list.append(filename)
     # Determine snapshot filename
-    output_filename = 'backup_{DATETIME}.{EXTENSION}'.format(
-        DATETIME=current_time, EXTENSION=output_extension)
+    output_filename = SNAPSHOT_FILENAME_FORMAT.format(
+        PREFIX=SNAPSHOT_PREFIX,
+        NAME=configuration.get_string('general', 'name', 'snapshot'),
+        DATETIME=datetime.datetime.now().strftime(SNAPSHOT_DATETIME_FORMAT),
+        TYPE='full',
+        FORMAT=output_extension)
     arguments.append('--file={FILENAME}'.format(
         FILENAME=os.path.join(directory, output_filename)))
 
-    if parser.has_section('dirconfig'):
-        for option in parser.options('dirconfig'):
-            value = get_parser_option(parser, int, 'dirconfig', option, 1)
+    if configuration.has_section('dirconfig'):
+        for option in configuration.options('dirconfig'):
+            value = configuration.get_int('dirconfig', option, 1)
             if value == 1:
                 arguments.append('--add-file={PATH}'.format(PATH=option))
             else:
@@ -137,8 +181,10 @@ def prepare_tar_cmdline(parser):
 
 if __name__ == '__main__':
     args = parse_arguments()
-    parser = parse_configuration_file(args.configuration)
-    cmdline = prepare_tar_cmdline(parser)
+    configuration = Configuration(args.configuration)
+    snapshots = load_snapshots_list(
+        configuration.get_string('general', 'target', '.'))
+    cmdline = prepare_tar_cmdline(configuration)
     print(' '.join(cmdline))
     process = subprocess.Popen(cmdline)
     process.communicate()
