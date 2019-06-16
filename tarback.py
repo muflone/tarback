@@ -2,7 +2,6 @@ from __future__ import print_function
 import argparse
 import ConfigParser
 import datetime
-import glob
 import os.path
 import subprocess
 
@@ -84,31 +83,8 @@ def parse_arguments():
     return args
 
 
-def parse_configuration_file(configuration_filename):
-    parser = ConfigParser.RawConfigParser()
-    parser.optionxform = str
-    parser.read(configuration_filename)
-    return parser
-
-
-def get_parser_option(parser, data_type, section, option, default):
-    result = default
-    if parser.has_section(section):
-        if parser.has_option(section, option):
-            if data_type is int:
-                result = parser.getint(section, option)
-            elif data_type is float:
-                result = parser.getfloat(section, option)
-            elif data_type is bool:
-                result = parser.getboolean(section, option)
-            else:
-                result = parser.get(section, option)
-    return result
-
-
 def prepare_tar_cmdline(configuration):
     directory = configuration.get_string('general', 'target', '.')
-    current_time = datetime.datetime.now().strftime('%Y-%m-%d_%H%M%S')
 
     arguments = ['tar', ]
     arguments.append('--create')
@@ -174,8 +150,6 @@ def prepare_tar_cmdline(configuration):
                 arguments.append('--add-file={PATH}'.format(PATH=option))
             else:
                 arguments.append('--exclude={PATH}'.format(PATH=option))
-
-
     return arguments
 
 
