@@ -6,6 +6,31 @@ import glob
 import os.path
 import subprocess
 
+SNAPSHOT_DATETIME_FORMAT = '%Y-%m-%d_%H%M%S'
+SNAPSHOT_PREFIX = 'backup'
+
+
+class Snapshot(object):
+    def __init__(self, filename):
+        self.filename = filename
+        fileparts = filename.split('.', 1)
+        self.extension = fileparts[1]
+        fileparts = fileparts[0].split('_')
+        # fileparts has the following content:
+        #   [0] = SNAPSHOT_PREFIX
+        #   [1..-3] = snapshot name
+        #   [-3] = snapshot date
+        #   [-2] = snapshot time
+        #   [-1] = snapshot type
+        self.name = None
+        self.datetime = None
+        self.type = None
+        if fileparts[0] == SNAPSHOT_PREFIX:
+            self.name = '_'.join(fileparts[1:-3])
+            self.type = fileparts[-1]
+            self.datetime = datetime.datetime.strptime(
+                '_'.join(fileparts[-3:-1]), SNAPSHOT_DATETIME_FORMAT)
+
 
 def parse_arguments():
     parser = argparse.ArgumentParser()
