@@ -141,16 +141,29 @@ class Configuration(object):
         return self.parser.options(section)
 
 
-def parse_arguments():
-    parser = argparse.ArgumentParser()
-    parser.add_argument('configuration',
-                        type=str,
-                        help='configuration file to use')
-    parser.add_argument('-v', '--verbose',
-                        action='store_true',
-                        help='output verbose')
-    args = parser.parse_args()
-    return args
+class CommandLineParser(object):
+    """
+    Parser for command line arguments
+
+    Members:
+      args:      ArgParse object containing the command line arguments
+    """
+    def __init__(self):
+        parser = argparse.ArgumentParser()
+        parser.add_argument('configuration',
+                            type=str,
+                            help='configuration file to use')
+        parser.add_argument('-v', '--verbose',
+                            action='store_true',
+                            help='output verbose')
+        self.args = parser.parse_args()
+
+    def get_configuration(self):
+        """
+        Get the configuration name
+        Returns:     string
+        """
+        return self.args.configuration
 
 
 def load_snapshots_list(directory):
@@ -226,8 +239,8 @@ def prepare_tar_cmdline(configuration):
 
 
 if __name__ == '__main__':
-    args = parse_arguments()
-    configuration = Configuration(args.configuration)
+    command_line = CommandLineParser()
+    configuration = Configuration(command_line.get_configuration())
     snapshots = load_snapshots_list(
         configuration.get_string('general', 'target', '.'))
     cmdline = prepare_tar_cmdline(configuration)
