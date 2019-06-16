@@ -162,5 +162,8 @@ if __name__ == '__main__':
         configuration.get_string('general', 'target', '.'))
     cmdline = prepare_tar_cmdline(configuration)
     print(' '.join(cmdline))
-    process = subprocess.Popen(cmdline)
-    process.communicate()
+    process = subprocess.Popen(cmdline,
+                               stdout=subprocess.PIPE,
+                               stderr=subprocess.PIPE)
+    stdout, stderr = process.communicate()
+    # print(stdout, stderr)
