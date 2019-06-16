@@ -11,6 +11,17 @@ SNAPSHOT_PREFIX = 'backup'
 
 
 class Snapshot(object):
+    """
+    Snapshot object representing a single snapshot instance from the
+    backup filename.
+
+    Members:
+      filename:  backup filename
+      extension: backup extension
+      name:      snapshot name
+      datetime:  snapshot date and time
+      type:      snapshot type (full, diff)
+    """
     def __init__(self, filename):
         self.filename = filename
         fileparts = filename.split('.', 1)
@@ -27,18 +38,33 @@ class Snapshot(object):
         self.type = None
         if fileparts[0] == SNAPSHOT_PREFIX:
             self.name = '_'.join(fileparts[1:-3])
-            self.type = fileparts[-1]
             self.datetime = datetime.datetime.strptime(
                 '_'.join(fileparts[-3:-1]), SNAPSHOT_DATETIME_FORMAT)
+            self.type = fileparts[-1]
 
 
 class Configuration(object):
+    """
+    Configuration object to get data from configuration files
+
+    Members:
+      parser:    ConfigParser object
+    """
     def __init__(self, filename):
         self.parser = ConfigParser.RawConfigParser()
         self.parser.optionxform = str
         self.parser.read(filename)
 
     def get(self, data_type, section, option, default):
+        """
+        Get data from the configuration object.
+        Arguments:
+          data_type: type of data to read (str, int, float, bool)
+          section:   section to read from
+          option:    option to read
+          default:   default value in case the option is missing
+        Returns:     value of the <data_type> type
+        """
         result = default
         if self.parser.has_section(section):
             if self.parser.has_option(section, option):
@@ -53,21 +79,65 @@ class Configuration(object):
         return result
 
     def get_string(self, section, option, default):
+        """
+        Get string data from the configuration object.
+        Arguments:
+          section:   section to read from
+          option:    option to read
+          default:   default value in case the option is missing
+        Returns      string value
+        """
         return self.get(str, section, option, default)
 
     def get_int(self, section, option, default):
+        """
+        Get int data from the configuration object.
+        Arguments:
+          section:   section to read from
+          option:    option to read
+          default:   default value in case the option is missing
+        Returns      int value
+        """
         return self.get(int, section, option, default)
 
     def get_float(self, section, option, default):
+        """
+        Get float data from the configuration object.
+        Arguments:
+          section:   section to read from
+          option:    option to read
+          default:   default value in case the option is missing
+        Returns      float value
+        """
         return self.get(float, section, option, default)
 
     def get_boolean(self, section, option, default):
+        """
+        Get boolean data from the configuration object.
+        Arguments:
+          section:   section to read from
+          option:    option to read
+          default:   default value in case the option is missing
+        Returns      boolean value
+        """
         return self.get(bool, section, option, default)
 
     def has_section(self, section):
+        """
+        Check if the configuration object has the specified section.
+        Arguments:
+          section:   section to check
+        Returns      True if the section exists, else False
+        """
         return self.parser.has_section(section)
 
     def options(self, section):
+        """
+        Get the options list for the selected section.
+        Arguments:
+          section:   section to check
+        Returns      A list of options
+        """
         return self.parser.options(section)
 
 
