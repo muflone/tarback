@@ -83,6 +83,18 @@ def parse_arguments():
     return args
 
 
+def load_snapshots_list(directory):
+    result = []
+    for filename in sorted(os.listdir(directory)):
+        if filename.startswith('backup_') and '.tar' in filename:
+            snapshot = Snapshot(filename)
+            result.append(snapshot)
+            print(snapshot.filename)
+            print('\tName:', snapshot.name)
+            print('\tDate:', snapshot.datetime)
+            print('\tType:', snapshot.type)
+
+
 def prepare_tar_cmdline(configuration):
     directory = configuration.get_string('general', 'target', '.')
 
@@ -123,16 +135,6 @@ def prepare_tar_cmdline(configuration):
     else:
         output_extension = 'tar'
 
-    # Loads the snapshots list
-    filename_length = (len('backup_') +
-                       len(current_time) +
-                       1 +
-                       len(output_extension))
-    snapshots_list = []
-    for filename in sorted(os.listdir(directory)):
-        if filename.startswith('backup_') and '.tar' in filename:
-            print(filename)
-            snapshots_list.append(filename)
     # Determine snapshot filename
     output_filename = SNAPSHOT_FILENAME_FORMAT.format(
         PREFIX=SNAPSHOT_PREFIX,
