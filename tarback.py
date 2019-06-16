@@ -17,6 +17,7 @@ def parse_arguments():
 
 def parse_configuration_file(configuration_filename):
     parser = ConfigParser.RawConfigParser()
+    parser.optionxform = str
     parser.read(configuration_filename)
     return parser
 
